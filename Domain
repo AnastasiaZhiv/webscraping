@@ -1,0 +1,50 @@
+# Import libraries
+import requests
+from requests import get
+from bs4 import BeautifulSoup
+import pandas as pd
+import numpy as np
+from time import sleep
+from random import randint
+
+pd.set_option("display.max_rows", None, "display.max_columns", None)
+
+# Create empty lists to store data
+Suburb = []
+Price = []
+Dwelling = []
+Info = []
+Beds = []
+Baths = []
+Parking = []
+
+# iterate through the pages and each house listing
+
+pages = np.arange(1,5,1)
+
+for page in pages:
+    page = requests.get("https://www.domain.com.au/sale/canberra-act/?price=0-300000&excludeunderoffer=1&page=" + str(page))
+    soup = BeautifulSoup(page.text, 'html.parser')
+    house_div = soup.find_all('div',class_='css-qrqvvg')
+    sleep(randint(2,10))
+    for info in house_div:
+        s = info.find('span',attrs={'itemprop':'addressLocality'}).text
+        Suburb.append(s)
+        p = info.find('p',attrs={'data-testid':'listing-card-price'}).text
+        Price.append(p)
+        d = info.find('span',class_='css-693528').text
+        Dwelling.append(d)
+        attr = info.find_all('span',attrs={'data-testid':'property-features-text-container'})
+        b = attr[0].text if len(attr) > 1 else '-'
+        Beds.append(b)
+        bth = attr[1].text if len(attr) > 1 else '-'
+        Baths.append(bth)
+        prk = attr[2].text if len(attr) > 1 else '-'
+        Parking.append(prk)
+        
+# Put all lists together
+
+data_list = list(zip(Suburb[1:], Price[1:], Dwelling[1:],Beds[1:],Baths[1:],Parking[1:]))
+Houses = pd.DataFrame(data_list, columns = ['Location','Price','Type','Bedrooms','Bathrooms','Parking'])        
+
+Houses
